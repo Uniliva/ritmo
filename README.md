@@ -21,3 +21,9 @@ Abra o endereço indicado pelo Vite, clique em **Abrir EPUB** e escolha seu livr
 - Os controles na parte inferior ajustam velocidade, tamanho da letra e tema.
 
 Os arquivos EPUB são lidos localmente no navegador. Preferências e posição de leitura são guardadas neste dispositivo.
+
+## Publicar no GitHub Pages
+
+O workflow em `.github/workflows/deploy.yml` compila e publica o app ao enviar alterações para `main` (ou ao executar manualmente o workflow em **Actions**).
+
+Na primeira publicação, abra **Settings → Pages** no repositório e selecione **GitHub Actions** como fonte de publicação. O endereço será `https://<usuario>.github.io/<repositorio>/`; o build configura automaticamente o caminho base para o nome do repositório.
