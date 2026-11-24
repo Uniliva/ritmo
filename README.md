@@ -18,8 +18,7 @@ Abra o endereço indicado pelo Vite, clique em **Abrir EPUB** e escolha seu livr
 - **Espaço:** iniciar ou pausar a rolagem.
 - **Setas para cima/baixo:** aumentar ou diminuir a velocidade.
 - **Page Up/Page Down:** navegar entre capítulos.
-- Os controles na parte inferior ajustam velocidade, tamanho da letra e tema.
-- O botão de largura no topo do leitor ajusta a largura do texto.
+- Os controles no topo do leitor ajustam rolagem, velocidade, tamanho da letra, tema e largura do texto.
 
 Os arquivos EPUB são lidos localmente no navegador. Preferências e posição de leitura são guardadas neste dispositivo.
 

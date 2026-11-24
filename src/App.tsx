@@ -45,7 +45,7 @@ function Icon({
   name,
   size = 18,
 }: {
-  name: "book" | "upload" | "play" | "pause" | "chevron" | "expand" | "panel" | "width" | "check" | "close";
+  name: "book" | "upload" | "play" | "pause" | "chevron" | "expand" | "panel" | "width" | "speed" | "theme" | "check" | "close";
   size?: number;
 }) {
   const paths = {
@@ -57,6 +57,8 @@ function Icon({
     expand: <><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3" /></>,
     panel: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></>,
     width: <><path d="M3 12h18M8 7l-5 5 5 5M16 7l5 5-5 5" /></>,
+    speed: <><path d="M4.93 19a10 10 0 1 1 14.14 0" /><path d="m12 12 4-4M12 19h.01" /></>,
+    theme: <><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 0-4h-1a1.5 1.5 0 0 1 0-3h2a5 5 0 0 0 5-5c0-3.3-3.6-6-7-6Z" /><circle cx="7.5" cy="10" r=".7" /><circle cx="10" cy="6.8" r=".7" /><circle cx="14" cy="6.8" r=".7" /></>,
     check: <path d="m5 12 4 4L19 6" />,
     close: <><path d="m6 6 12 12M18 6 6 18" /></>,
   };
@@ -267,7 +269,7 @@ export default function App() {
 
   return (
     <main
-      className={`app theme-${settings.theme} ${dragging ? "is-dragging" : ""}`}
+      className={`app theme-${settings.theme} ${fullscreen ? "fullscreen-mode" : ""} ${dragging ? "is-dragging" : ""}`}
       onDragOver={(event) => {
         event.preventDefault();
         setDragging(true);
@@ -290,17 +292,6 @@ export default function App() {
           <span>ritmo<span className="brand-period">.</span></span>
         </a>
         <div className="topbar-right">
-          {book && <span className="current-book"><Icon name="book" size={15} />{book.title}</span>}
-          <button
-            className="icon-button sidebar-toggle"
-            onClick={() => setSidebarOpen((open) => !open)}
-            aria-label={sidebarOpen ? "Recolher painel lateral" : "Expandir painel lateral"}
-            aria-expanded={sidebarOpen}
-            aria-controls="reading-sidebar"
-            title={sidebarOpen ? "Recolher painel lateral" : "Expandir painel lateral"}
-          >
-            <Icon name="panel" size={17} />
-          </button>
           <button className="button button-outline" onClick={() => fileInputRef.current?.click()}>
             <Icon name="upload" size={16} />
             <span>Abrir EPUB</span>
@@ -369,19 +360,93 @@ export default function App() {
         <section className={`reader-panel theme-${settings.theme}`}>
           <div className="reader-toolbar">
             <div className="reading-location">
-              <span className="location-label">LENDO AGORA</span>
+              <span className={book ? "book-title" : "location-label"}>{book?.title ?? "LENDO AGORA"}</span>
               <strong>{chapter?.title ?? "Sua próxima leitura"}</strong>
             </div>
             <div className="toolbar-actions">
               {book && (
                 <span className="chapter-progress">{String(activeChapter + 1).padStart(2, "0")} <i>/</i> {String(chapterCount).padStart(2, "0")}</span>
               )}
-              <details className="width-settings">
+              <button
+                className={`icon-button play-toggle ${playing ? "is-playing" : ""}`}
+                onClick={() => setPlaying((current) => !current)}
+                disabled={!book}
+                aria-label={playing ? "Pausar rolagem" : "Iniciar rolagem"}
+                title={playing ? "Pausar rolagem" : "Iniciar rolagem"}
+              >
+                <Icon name={playing ? "pause" : "play"} size={16} />
+              </button>
+              <details className="toolbar-popover" name="reader-controls">
+                <summary className="icon-button" aria-label="Ajustar velocidade" title="Ajustar velocidade">
+                  <Icon name="speed" size={17} />
+                </summary>
+                <div className="popover-panel">
+                  <label className="range-control popover-range">
+                    <span className="range-heading"><span>Velocidade</span><strong>{settings.speed}<small> px/s</small></strong></span>
+                    <input
+                      type="range"
+                      min="8"
+                      max="120"
+                      step="1"
+                      value={settings.speed}
+                      onChange={(event) => setSettings((current) => ({ ...current, speed: Number(event.target.value) }))}
+                      aria-label="Velocidade da rolagem"
+                      style={{ "--range-progress": `${((settings.speed - 8) / 112) * 100}%` } as React.CSSProperties}
+                    />
+                    <span className="range-ends"><span>Lento</span><span>Rápido</span></span>
+                  </label>
+                </div>
+              </details>
+              <details className="toolbar-popover" name="reader-controls">
+                <summary className="icon-button text-size-icon" aria-label="Ajustar tamanho da letra" title="Ajustar tamanho da letra">
+                  Aa
+                </summary>
+                <div className="popover-panel">
+                  <label className="range-control popover-range">
+                    <span className="range-heading"><span>Tamanho da letra</span><strong>{settings.fontSize}<small> px</small></strong></span>
+                    <input
+                      type="range"
+                      min="22"
+                      max="56"
+                      step="1"
+                      value={settings.fontSize}
+                      onChange={(event) => setSettings((current) => ({ ...current, fontSize: Number(event.target.value) }))}
+                      aria-label="Tamanho da letra"
+                      style={{ "--range-progress": `${((settings.fontSize - 22) / 34) * 100}%` } as React.CSSProperties}
+                    />
+                    <span className="range-ends"><span>Pequena</span><span>Grande</span></span>
+                  </label>
+                </div>
+              </details>
+              <details className="toolbar-popover" name="reader-controls">
+                <summary className="icon-button" aria-label="Escolher tema" title="Escolher tema">
+                  <Icon name="theme" size={17} />
+                </summary>
+                <div className="popover-panel theme-popover">
+                  <span className="popover-title">Tema de leitura</span>
+                  <div className="theme-options">
+                    {themes.map((theme) => (
+                      <button
+                        key={theme.id}
+                        className={`theme-option ${settings.theme === theme.id ? "selected" : ""}`}
+                        onClick={() => setSettings((current) => ({ ...current, theme: theme.id }))}
+                        aria-label={`Tema ${theme.label}`}
+                        aria-pressed={settings.theme === theme.id}
+                        title={theme.label}
+                      >
+                        <span style={{ backgroundColor: theme.background, color: theme.text }}>Aa</span>
+                        {settings.theme === theme.id && <i><Icon name="check" size={10} /></i>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </details>
+              <details className="toolbar-popover" name="reader-controls">
                 <summary className="icon-button" aria-label="Ajustar largura do texto" title="Ajustar largura do texto">
                   <Icon name="width" size={17} />
                 </summary>
-                <div className="width-popover">
-                  <label className="range-control width-control">
+                <div className="popover-panel">
+                  <label className="range-control popover-range">
                     <span className="range-heading"><span>Largura do texto</span><strong>{settings.textWidth}<small> px</small></strong></span>
                     <input
                       type="range"
@@ -397,7 +462,17 @@ export default function App() {
                   </label>
                 </div>
               </details>
-              <button className="icon-button" onClick={() => void toggleFullscreen()} aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"} title="Tela cheia">
+              <button
+                className="icon-button sidebar-toggle"
+                onClick={() => setSidebarOpen((open) => !open)}
+                aria-label={sidebarOpen ? "Recolher painel lateral" : "Expandir painel lateral"}
+                aria-expanded={sidebarOpen}
+                aria-controls="reading-sidebar"
+                title={sidebarOpen ? "Recolher painel lateral" : "Expandir painel lateral"}
+              >
+                <Icon name="panel" size={17} />
+              </button>
+              <button className="icon-button" onClick={() => void toggleFullscreen()} aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"} title={fullscreen ? "Sair da tela cheia" : "Tela cheia"}>
                 <Icon name="expand" size={17} />
               </button>
             </div>
@@ -459,71 +534,6 @@ export default function App() {
             )}
           </div>
 
-          <div className="control-dock">
-            <div className="playback-control">
-              <button
-                className={`play-button ${playing ? "is-playing" : ""}`}
-                onClick={() => setPlaying((current) => !current)}
-                disabled={!book}
-                aria-label={playing ? "Pausar rolagem" : "Iniciar rolagem"}
-                title="Espaço para iniciar ou pausar"
-              >
-                <Icon name={playing ? "pause" : "play"} size={17} />
-              </button>
-              <div className="playback-label">
-                <strong>{playing ? "Rolagem ativa" : "Iniciar leitura"}</strong>
-                <span>Espaço para {playing ? "pausar" : "começar"}</span>
-              </div>
-              <div className="dock-divider" />
-              <label className="range-control speed-control">
-                <span className="range-heading"><span>Velocidade</span><strong>{settings.speed}<small> px/s</small></strong></span>
-                <input
-                  type="range"
-                  min="8"
-                  max="120"
-                  step="1"
-                  value={settings.speed}
-                  onChange={(event) => setSettings((current) => ({ ...current, speed: Number(event.target.value) }))}
-                  aria-label="Velocidade da rolagem"
-                  style={{ "--range-progress": `${((settings.speed - 8) / 112) * 100}%` } as React.CSSProperties}
-                />
-                <span className="range-ends"><span>Lento</span><span>Rápido</span></span>
-              </label>
-              <div className="dock-divider" />
-              <label className="range-control font-control">
-                <span className="range-heading"><span>Tamanho da letra</span><strong>{settings.fontSize}<small> px</small></strong></span>
-                <input
-                  type="range"
-                  min="22"
-                  max="56"
-                  step="1"
-                  value={settings.fontSize}
-                  onChange={(event) => setSettings((current) => ({ ...current, fontSize: Number(event.target.value) }))}
-                  aria-label="Tamanho da letra"
-                  style={{ "--range-progress": `${((settings.fontSize - 22) / 34) * 100}%` } as React.CSSProperties}
-                />
-                <span className="range-ends"><span>A</span><span className="large-a">A</span></span>
-              </label>
-            </div>
-            <div className="theme-control">
-              <span>TEMA</span>
-              <div className="theme-options">
-                {themes.map((theme) => (
-                  <button
-                    key={theme.id}
-                    className={`theme-option ${settings.theme === theme.id ? "selected" : ""}`}
-                    onClick={() => setSettings((current) => ({ ...current, theme: theme.id }))}
-                    aria-label={`Tema ${theme.label}`}
-                    aria-pressed={settings.theme === theme.id}
-                    title={theme.label}
-                  >
-                    <span style={{ backgroundColor: theme.background, color: theme.text }}>Aa</span>
-                    {settings.theme === theme.id && <i><Icon name="check" size={10} /></i>}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </section>
       </section>
 
