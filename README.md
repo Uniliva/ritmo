@@ -27,4 +27,4 @@ Os arquivos EPUB são lidos localmente no navegador. Preferências e posição d
 
 O workflow em `.github/workflows/deploy.yml` compila e publica o app ao enviar alterações para `main` (ou ao executar manualmente o workflow em **Actions**).
 
-Na primeira publicação, abra **Settings → Pages** no repositório e selecione **GitHub Actions** como fonte de publicação. O endereço será `https://<usuario>.github.io/<repositorio>/`; o build configura automaticamente o caminho base para o nome do repositório.
+Na primeira publicação, abra **Settings → Pages** no repositório e selecione **GitHub Actions** como fonte de publicação. Sem domínio personalizado, o build configura automaticamente o caminho base para `https://<usuario>.github.io/<repositorio>/`. Com um arquivo `CNAME` na raiz do projeto, os assets são publicados na raiz do domínio personalizado.
