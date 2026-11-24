@@ -4,12 +4,13 @@ import { readEpub } from "./epub";
 import type { ParsedBook } from "./epub";
 
 type Theme = "grafite" | "claro" | "preto";
-type Settings = { speed: number; fontSize: number; theme: Theme };
+type Settings = { speed: number; fontSize: number; textWidth: number; theme: Theme };
 type SavedPosition = { chapterIndex: number; scrollTop: number };
 
 const initialSettings: Settings = {
   speed: 32,
   fontSize: 34,
+  textWidth: 740,
   theme: "grafite",
 };
 
@@ -28,6 +29,9 @@ function readSettings(): Settings {
       fontSize: typeof values.fontSize === "number" && Number.isFinite(values.fontSize)
         ? Math.min(56, Math.max(22, values.fontSize))
         : initialSettings.fontSize,
+      textWidth: typeof values.textWidth === "number" && Number.isFinite(values.textWidth)
+        ? Math.min(1100, Math.max(520, values.textWidth))
+        : initialSettings.textWidth,
       theme: theme === "claro" || theme === "preto" || theme === "grafite"
         ? theme
         : initialSettings.theme,
@@ -41,7 +45,7 @@ function Icon({
   name,
   size = 18,
 }: {
-  name: "book" | "upload" | "play" | "pause" | "chevron" | "expand" | "panel" | "check" | "close";
+  name: "book" | "upload" | "play" | "pause" | "chevron" | "expand" | "panel" | "width" | "check" | "close";
   size?: number;
 }) {
   const paths = {
@@ -52,6 +56,7 @@ function Icon({
     chevron: <path d="m9 18 6-6-6-6" />,
     expand: <><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M3 16v3a2 2 0 0 0 2 2h3" /></>,
     panel: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /></>,
+    width: <><path d="M3 12h18M8 7l-5 5 5 5M16 7l5 5-5 5" /></>,
     check: <path d="m5 12 4 4L19 6" />,
     close: <><path d="m6 6 12 12M18 6 6 18" /></>,
   };
@@ -371,6 +376,27 @@ export default function App() {
               {book && (
                 <span className="chapter-progress">{String(activeChapter + 1).padStart(2, "0")} <i>/</i> {String(chapterCount).padStart(2, "0")}</span>
               )}
+              <details className="width-settings">
+                <summary className="icon-button" aria-label="Ajustar largura do texto" title="Ajustar largura do texto">
+                  <Icon name="width" size={17} />
+                </summary>
+                <div className="width-popover">
+                  <label className="range-control width-control">
+                    <span className="range-heading"><span>Largura do texto</span><strong>{settings.textWidth}<small> px</small></strong></span>
+                    <input
+                      type="range"
+                      min="520"
+                      max="1100"
+                      step="20"
+                      value={settings.textWidth}
+                      onChange={(event) => setSettings((current) => ({ ...current, textWidth: Number(event.target.value) }))}
+                      aria-label="Largura do texto"
+                      style={{ "--range-progress": `${((settings.textWidth - 520) / 580) * 100}%` } as React.CSSProperties}
+                    />
+                    <span className="range-ends"><span>Compacta</span><span>Ampla</span></span>
+                  </label>
+                </div>
+              </details>
               <button className="icon-button" onClick={() => void toggleFullscreen()} aria-label={fullscreen ? "Sair da tela cheia" : "Tela cheia"} title="Tela cheia">
                 <Icon name="expand" size={17} />
               </button>
@@ -393,7 +419,7 @@ export default function App() {
             aria-label="Texto do livro"
           >
             {chapter ? (
-              <article className="reading-content" style={{ fontSize: `${settings.fontSize}px` }}>
+              <article className="reading-content" style={{ fontSize: `${settings.fontSize}px`, maxWidth: `${settings.textWidth}px` }}>
                 <div className="chapter-kicker">CAPÍTULO {String(activeChapter + 1).padStart(2, "0")}</div>
                 <h2>{chapter.title}</h2>
                 <div className="chapter-rule"><span /></div>
